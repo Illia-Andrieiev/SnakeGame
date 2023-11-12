@@ -64,11 +64,11 @@ void PixelBox::setGreen(unsigned char green) {
 void PixelBox::setBlue(unsigned char blue) {
 	colour[2] = blue;
 }
+// Draw PixelBox on display image
 void PixelBox::draw(cimg_library::CImgDisplay& display, cimg_library::CImg<unsigned char>& image) const {
 	for (int i = x; i < x + size ; i++) { //	|| i < image.width()
 		for (int j = y; j < y + size ; j++) { // || j < image.height()
-			unsigned char ch = image.atXY(i, j);
-			image.draw_point(i, j, colour);
+			image.draw_point(i, j,colour);
 		}
 	}
 	image.display(display);
