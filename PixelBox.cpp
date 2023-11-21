@@ -15,6 +15,14 @@ PixelBox::PixelBox(int size, int x, int y, unsigned char colour[3]) {
 	this->colour[1] = colour[1];
 	this->colour[2] = colour[2];
 }
+PixelBox::PixelBox(const int size, const int x, const int y, const unsigned char colour[3]) {
+	this->size = size;
+	this->x = x;
+	this->y = y;
+	this->colour[0] = colour[0];
+	this->colour[1] = colour[1];
+	this->colour[2] = colour[2];
+}
 int PixelBox::getSize() const {
 	return size;
 }
@@ -71,5 +79,4 @@ void PixelBox::draw(cimg_library::CImgDisplay& display, cimg_library::CImg<unsig
 			image.draw_point(i, j,colour);
 		}
 	}
-	image.display(display);
 }

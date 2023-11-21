@@ -11,6 +11,8 @@ private:
 	int argc; 
 	char** argv;
 	// Game parametrs
+	int maximumEnlargeApples;
+	int maximumShrinkApples;
 	unsigned int W = 200, H = 200;//400
 	int boxSize; // Size of one game field block
 	unsigned char firstBoxColour[3]; // Colour of sneaks head pixels in RGB format
@@ -23,13 +25,7 @@ private:
 	void setSnakeColour(unsigned char colour1[3], unsigned char colour2[3]);
 	void setApplesColour(unsigned char colourEnlarge[3],	unsigned char colourShrink[3]);
 public:
-	SnakeGame();
-	SnakeGame(int argc, char** argv);
-	SnakeGame(int argc, char** argv, int boxSize);
-	SnakeGame(int argc, char** argv, unsigned char firstBoxColour[3],
-		unsigned char secondBoxColour[3], int boxSize);
-	SnakeGame(int argc, char** argv, unsigned char firstBoxColour[3], 
-		unsigned char secondBoxColour[3], unsigned char colourEnlarge[3], unsigned char colourShrink[3], int boxSize);
+	SnakeGame(int argc, char** argv, int boxSize = 5);
 	void game();
 };
 

@@ -9,6 +9,7 @@ private:
 public:
 	PixelBox(int size,int x, int y, unsigned char red, unsigned char green, unsigned char blue);
 	PixelBox(int size,int x, int y, unsigned char colour[3]);
+	PixelBox(const int size, const int x, const int y, const unsigned char colour[3]);
 	int getSize() const;
 	int getX() const;
 	int getY() const;
