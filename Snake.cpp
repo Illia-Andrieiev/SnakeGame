@@ -13,6 +13,10 @@ Snake::Snake(SnakeGame& game/*std::shared_ptr<SnakeGame> game*/, const int snake
         this->firstBoxColour[i] = firstBoxColour[i];
         this->secondBoxColour[i] = secondBoxColour[i];
     }
+    timeFromPlaceEnlargeApple = game.enlargeAppleLifeTime / 1.5;
+    timeFromPlaceShrinkApple = 0;
+    timeFromRemoveEnlargeApple = 0;
+    timeFromRemoveShrinkApple = 0;
     this->snakeLength = snakeLength;
     this->snakeSpeed = snakeSpeed;
     if (boxSize < 5)
@@ -30,9 +34,9 @@ Snake::Snake(SnakeGame& game/*std::shared_ptr<SnakeGame> game*/, const int snake
 void Snake::initSnakeBody() {
     for (int i = 0; i < snakeLength; i++) {
         if (i % 2 == 0)
-            snakeBody.push_back(PixelBox(boxSize, -boxSize*i - boxSize, 0, firstBoxColour));
+            snakeBody.push_back(PixelBox(boxSize, -boxSize*i - boxSize, game.scoreTableH, firstBoxColour));
         else
-            snakeBody.push_back(PixelBox(boxSize, -boxSize * i - boxSize, 0, secondBoxColour));
+            snakeBody.push_back(PixelBox(boxSize, -boxSize * i - boxSize, game.scoreTableH, secondBoxColour));
     }
 }
 void Snake::enlargeSnake(int amount) {
@@ -44,6 +48,11 @@ void Snake::enlargeSnake(int amount) {
     }
     if (param % 30 == 0) {
         amount = 5;
+    }
+    if (snakeLength == 1) {
+        snakeBody.push_back(PixelBox(boxSize, prevHeadX, prevHeadY, secondBoxColour));
+        --amount;
+        ++snakeLength;
     }
     for (int i = snakeLength; i < snakeLength + amount; i++) {
         if (i % 2 == 0)
@@ -65,7 +74,7 @@ bool Snake::shrinkSnake(int amount) {
     }
     else { 
         for (int i = 0; i < amount; i++) {
-            drawGrass();
+            drawGrass(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY());
             snakeBody.erase(snakeBody.end()-1);
             snakeLength = snakeBody.size();
         }        
@@ -85,16 +94,17 @@ void Snake::draw() const {
     game.background.display(game.disp);
     game.disp.wait(snakeSpeed);
 }
-void Snake::drawGrass() {
+void Snake::drawGrass(int x,int y) {
     const unsigned char green[3] = { 50, 205, 50 };
     cimg_library::CImg<unsigned char> grass;
     grass.assign(64, 64, 1, 3, 0).draw_rectangle(0, 0, game.W - 1, game.H - 1, green, 1.0f)
         .resize(boxSize, boxSize).noise(35).blur(2).normalize(0, 128);
     background = grass;
-    game.background.draw_image(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY(), 0, 0, background);
+    game.background.draw_image(x, y, 0, 0, background);
 }
+
 void Snake::moveLeft() {
-    drawGrass();
+    drawGrass(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY());
     for (std::size_t i = snakeLength - 1; i >0; i--)
         snakeBody[i].setPosition(snakeBody[i - 1].getX(), snakeBody[i - 1].getY());
     snakeBody[0].setX(snakeBody[0].getX() - boxSize);
@@ -103,7 +113,7 @@ void Snake::moveLeft() {
     draw();
 }
 void Snake::moveRight() {
-    drawGrass();
+    drawGrass(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY());
     for (std::size_t i = snakeLength - 1; i > 0; i--)
         snakeBody[i].setPosition(snakeBody[i - 1].getX(), snakeBody[i - 1].getY());
     snakeBody[0].setX(snakeBody[0].getX() + boxSize);
@@ -113,24 +123,27 @@ void Snake::moveRight() {
 }
 void Snake::moveUp() {
  
-    drawGrass();
+    drawGrass(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY());
     for (std::size_t i = snakeLength - 1; i > 0; i--)
         snakeBody[i].setPosition(snakeBody[i - 1].getX(), snakeBody[i - 1].getY());
     snakeBody[0].setY(snakeBody[0].getY() - boxSize);
-    if (snakeBody[0].getY() < 0)
+    if (snakeBody[0].getY() < game.scoreTableH)
         snakeBody[0].setY(static_cast<int>(game.background.height()) - boxSize);
     draw();
 }
 void Snake::moveDown() {
-    drawGrass();
+    drawGrass(snakeBody[snakeLength - 1].getX(), snakeBody[snakeLength - 1].getY());
     for (std::size_t i = snakeLength - 1; i > 0; i--)
         snakeBody[i].setPosition(snakeBody[i - 1].getX(), snakeBody[i - 1].getY());
     snakeBody[0].setY(snakeBody[0].getY() + boxSize);
     if (snakeBody[0].getY() > static_cast<int>(game.background.height()) - boxSize)
-        snakeBody[0].setY(0);
+        snakeBody[0].setY(game.scoreTableH);
     draw();
 }
 bool Snake::move(int param) {
+    cimg_library::cimg::tic();
+    prevHeadX = snakeBody[0].getX();
+    prevHeadY = snakeBody[0].getY();
     placeRandomEnlargeApple();
     placeRandomShrinkApple();
     switch (param)
@@ -150,8 +163,13 @@ bool Snake::move(int param) {
     default:
         break;
     }
+    int time = cimg_library::cimg::toc();
     currHeadX = snakeBody[0].getX();
     currHeadY = snakeBody[0].getY();
+    timeFromPlaceEnlargeApple += time;
+    timeFromPlaceShrinkApple += time;
+    timeFromRemoveEnlargeApple += time;
+    timeFromRemoveShrinkApple += time;
     return isCollide() + checkApples();
 }
 // Is checking pixelBox have same coordinates as some pixelBox in vector
@@ -182,18 +200,31 @@ int Snake::getScore() const {
 void Snake::placeRandomEnlargeApple() {
     if (enlargeApples.size() >= game.maximumEnlargeApples)
         return;
-    if (snakeLength >= (game.W - boxSize) * (game.H - boxSize) - 1)
+    if (snakeLength >= (game.W/boxSize) * (game.H/boxSize) - 1)
         return;
-    PixelBox apple = placeRandomPixelBox(colourEnlarge);
-    enlargeApples.push_back(apple);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, int(game.enlargeAppleLifeTime / 1.5));
+    if (timeFromPlaceEnlargeApple > distr(gen)) {
+        PixelBox apple = placeRandomPixelBox(colourEnlarge);
+        enlargeApples.push_back(apple);
+        timeFromPlaceEnlargeApple = 0;
+    }
 }
 void Snake::placeRandomShrinkApple() {
     if (shrinkApples.size() >= game.maximumShrinkApples)
         return;
-    if (snakeLength >= (game.W - boxSize) * (game.H - boxSize) - 1)
+    if (snakeLength >= (game.W/boxSize) * (game.H/boxSize) - 1)
         return;
-    PixelBox apple = placeRandomPixelBox(colourShrink);
-    shrinkApples.push_back(apple);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, int(game.shrinkAppleLifeTime/1.5));
+    int timePoint = distr(gen);
+    if (timeFromPlaceShrinkApple > timePoint) {
+        PixelBox apple = placeRandomPixelBox(colourShrink);
+        shrinkApples.push_back(apple);
+        timeFromPlaceShrinkApple = 0;
+    }
 }
 bool Snake::isContainCoordinates(std::vector<PixelBox> &vec, int x, int y) const{
     for (auto box : vec) {
@@ -204,27 +235,47 @@ bool Snake::isContainCoordinates(std::vector<PixelBox> &vec, int x, int y) const
 }
 bool Snake::checkApples() {
     if (isAteApple(enlargeApples)) {
-        deleteApple(enlargeApples);
+        deleteCollidedApple(enlargeApples);
         enlargeSnake(1);
+        return false;
     }
     if (isAteApple(shrinkApples)) {
-        deleteApple(shrinkApples);
+        deleteCollidedApple(shrinkApples);
         return shrinkSnake(4);
+    }
+    if (timeFromRemoveEnlargeApple >= game.enlargeAppleLifeTime) {
+        deleteRandomApple(enlargeApples);
+        timeFromRemoveEnlargeApple = 0;
+    }
+    if (timeFromRemoveShrinkApple >= game.shrinkAppleLifeTime) {
+        deleteRandomApple(shrinkApples);
+        timeFromRemoveShrinkApple = 0;
     }
     return false;
 }
-void Snake::deleteApple(std::vector<PixelBox>& apples) {
+void Snake::deleteCollidedApple(std::vector<PixelBox>& apples) {
     for (int i = 0; i < apples.size(); i++) {
         if (apples[i].getX() == snakeBody[0].getX() && apples[i].getY() == snakeBody[0].getY()) {
             apples.erase(apples.begin() + i);
         }
     }
 }
+void Snake::deleteRandomApple(std::vector<PixelBox>& apples) {
+    if (apples.size() == 0)
+        return;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distr(0, apples.size()-1);
+    int pos = distr(gen);
+    drawGrass(apples[pos].getX(), apples[pos].getY());
+    apples.erase(apples.begin() + pos);
+     
+}
 PixelBox Snake::placeRandomPixelBox(unsigned char colour[3]) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrX(0, game.W - boxSize);
-    std::uniform_int_distribution<> distrY(0, game.H - boxSize);
+    std::uniform_int_distribution<> distrY(game.scoreTableH, game.scoreTableH + game.H - boxSize);
     while (true) {
         int x = distrX(gen);
         x = x / boxSize * boxSize;

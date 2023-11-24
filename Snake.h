@@ -10,9 +10,15 @@ private:
 	//std::shared_ptr<SnakeGame> game;
 	SnakeGame& game;
 	cimg_library::CImg<unsigned char> background;
+	std::time_t timeFromPlaceEnlargeApple;
+	std::time_t timeFromPlaceShrinkApple;
+	std::time_t timeFromRemoveEnlargeApple;
+	std::time_t timeFromRemoveShrinkApple;
 	int score;
 	int currHeadX;
 	int currHeadY;
+	int prevHeadX;
+	int prevHeadY;
 	int boxSize; // Size of one game field block
 	int snakeSpeed; // Speed of snake
 	unsigned char firstBoxColour[3]; // Colour of sneaks head pixels in RGB format
@@ -24,9 +30,10 @@ private:
 	std::vector<PixelBox>shrinkApples; // Positions of all shrink apples. Stored as x1,y1 coordinates pairs
 	std::vector<PixelBox> snakeBody; // All snake PixelBoxes
 	// Methods
-	void deleteApple(std::vector<PixelBox>& apples);
+	void deleteCollidedApple(std::vector<PixelBox>& apples);
+	void deleteRandomApple(std::vector<PixelBox>& apples);
 	void initSnakeBody();
-	void drawGrass();
+	void drawGrass(int x, int y);
 	bool isAteApple(std::vector<PixelBox>& apples) const;
 	bool isCollide() const;
 	void placeRandomEnlargeApple();

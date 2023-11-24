@@ -11,9 +11,13 @@ private:
 	int argc; 
 	char** argv;
 	// Game parametrs
-	int maximumEnlargeApples;
-	int maximumShrinkApples;
+	int moveDirection = 1;
+	int enlargeAppleLifeTime;
+	int shrinkAppleLifeTime;
+	int maximumEnlargeApples; // life time of enlarge apple in ms
+	int maximumShrinkApples; // life time of shrink apple in ms
 	unsigned int W = 200, H = 200;//400
+	unsigned int scoreTableH = 25;
 	int boxSize; // Size of one game field block
 	unsigned char firstBoxColour[3]; // Colour of sneaks head pixels in RGB format
 	unsigned char secondBoxColour[3]; // Colour of sneaks second box pixels in RGB format
