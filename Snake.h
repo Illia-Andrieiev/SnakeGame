@@ -43,17 +43,21 @@ private:
 	bool checkApples();
 	bool shrinkSnake(int amount);
 	void draw() const;
-	bool isContainCoordinates(std::vector<PixelBox> &vec, int x, int y) const;
-public:
-	Snake(SnakeGame& game/*std::shared_ptr<SnakeGame> game*/, const int snakeSpeed, unsigned char firstBoxColour[3], unsigned char secondBoxColour[3],
-		unsigned char colourEnlarge[3], unsigned char colourShrink[3], int boxSize, int snakeLength = 4);
 	void moveLeft();
 	void moveRight();
 	void moveUp();
 	void moveDown();
+	bool isContainCoordinates(std::vector<PixelBox> &vec, int x, int y) const;
+	void changeSpeed(char operation, int amount);
+public:
+	Snake(SnakeGame& game, const int snakeSpeed, unsigned char firstBoxColour[3], unsigned char secondBoxColour[3],
+		unsigned char colourEnlarge[3], unsigned char colourShrink[3], int boxSize, int snakeLength = 4);
+
 	bool move(int param);
 	int getXHeadPosition() const;
 	int getYHeadPosition() const;
 	int getScore() const;
+	void clear(const int snakeSpeed, unsigned char firstBoxColour[3], unsigned char secondBoxColour[3],
+		unsigned char colourEnlarge[3], unsigned char colourShrink[3], int boxSize, int snakeLength = 4);
 };
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include "libs/CImg-3.3.2/CImg.h"
 #include "Snake.h"
 class SnakeGame
@@ -11,6 +12,8 @@ private:
 	int argc; 
 	char** argv;
 	// Game parametrs
+	std::vector<int> records;
+	int maximumRecords = 10;
 	int moveDirection = 1;
 	int enlargeAppleLifeTime;
 	int shrinkAppleLifeTime;
@@ -26,6 +29,11 @@ private:
 	/*
 			Methots
 	*/
+	void readRecordsFromFile();
+	void printRecordsInFile();
+	void displayRecords();
+	void addRecord(int rec);
+	void displayMenu();
 	void setSnakeColour(unsigned char colour1[3], unsigned char colour2[3]);
 	void setApplesColour(unsigned char colourEnlarge[3],	unsigned char colourShrink[3]);
 public:

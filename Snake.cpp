@@ -31,6 +31,38 @@ Snake::Snake(SnakeGame& game/*std::shared_ptr<SnakeGame> game*/, const int snake
     background.assign(64, 64, 1, 3, 0).draw_rectangle(0, 0, game.W - 1, game.H - 1, green, 1.0f)
         .resize(boxSize, boxSize).noise(35).blur(2).normalize(0, 128);
 }
+void Snake::clear(const int snakeSpeed, unsigned char firstBoxColour[3], unsigned char secondBoxColour[3],
+    unsigned char colourEnlarge[3], unsigned char colourShrink[3], int boxSize, int snakeLength){
+    score = 0;
+    const unsigned char green[3] = { 50, 205, 50 };
+    const unsigned char white[3] = { 255, 255, 255 };
+    for (int i = 0; i < 3; i++) {
+        this->colourEnlarge[i] = colourEnlarge[i];
+        this->colourShrink[i] = colourShrink[i];
+        this->firstBoxColour[i] = firstBoxColour[i];
+        this->secondBoxColour[i] = secondBoxColour[i];
+    }
+    timeFromPlaceEnlargeApple = game.enlargeAppleLifeTime / 1.5;
+    timeFromPlaceShrinkApple = 0;
+    timeFromRemoveEnlargeApple = 0;
+    timeFromRemoveShrinkApple = 0;
+    this->snakeLength = snakeLength;
+    this->snakeSpeed = snakeSpeed;
+    if (boxSize < 5)
+        this->boxSize = 5;
+    else if (boxSize > 50)
+        this->boxSize = 50;
+    else
+        this->boxSize = (boxSize / 5) * 5;
+    snakeBody.clear();
+    enlargeApples.clear();
+    shrinkApples.clear();
+    initSnakeBody();
+    currHeadX = snakeBody[0].getX();
+    currHeadY = snakeBody[0].getY();
+    background.assign(64, 64, 1, 3, 0).draw_rectangle(0, 0, game.W - 1, game.H - 1, green, 1.0f)
+        .resize(boxSize, boxSize).noise(35).blur(2).normalize(0, 128);
+}
 void Snake::initSnakeBody() {
     for (int i = 0; i < snakeLength; i++) {
         if (i % 2 == 0)
@@ -237,10 +269,22 @@ bool Snake::checkApples() {
     if (isAteApple(enlargeApples)) {
         deleteCollidedApple(enlargeApples);
         enlargeSnake(1);
+        if (snakeLength < 50 && snakeLength % 2 == 0)
+            changeSpeed('+', 1);
+        else if (snakeLength < 100 && snakeLength % 5 == 0)
+            changeSpeed('+', 1);
+        else if (snakeLength % 10 == 0)
+            changeSpeed('+', 1);
+        std::cout << "speed: " << snakeSpeed << std::endl;
         return false;
     }
     if (isAteApple(shrinkApples)) {
         deleteCollidedApple(shrinkApples);
+        if(snakeLength>100)
+            changeSpeed('-', 1);
+        else
+            changeSpeed('-', 2);
+        std::cout << "speed: " << snakeSpeed << std::endl;
         return shrinkSnake(4);
     }
     if (timeFromRemoveEnlargeApple >= game.enlargeAppleLifeTime) {
@@ -287,4 +331,11 @@ PixelBox Snake::placeRandomPixelBox(unsigned char colour[3]) {
         PixelBox apple(boxSize, x, y, colour);
         return apple;
     }
+}
+// Change snake speeed in ms
+void Snake::changeSpeed(char operation, int amountMS) {
+    if (operation == '-')
+        snakeSpeed += amountMS;
+    if (operation == '+' && snakeSpeed > 15)
+        snakeSpeed -= amountMS;
 }
