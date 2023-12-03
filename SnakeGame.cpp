@@ -1,10 +1,10 @@
-//cimg_library::cimg::dialog
 #include<string>
 #include<iostream>
 #include<fstream>
 #include<ctime>
 #include "SnakeGame.h"
 #include"PixelBox.h"
+#include"libs/boost/ut.hpp"
 
 // Constructors
 SnakeGame::SnakeGame(int argc, char** argv, int boxSize) {
@@ -33,7 +33,7 @@ SnakeGame::SnakeGame(int argc, char** argv, int boxSize) {
         .noise(10).resize(W, H + scoreTableH).blur(2).normalize(0, 128).draw_rectangle(0, 0, W-1, scoreTableH-1, grey, 1.0f);
     cimg_library::CImgDisplay displ(background, "* CImg-Snake *");
     this->disp = displ;
-    readRecordsFromFile();
+    readRecordsFromFile("Records.txt");
 }
 // Main game method
 void SnakeGame::game() {
@@ -61,7 +61,10 @@ void SnakeGame::game() {
     /*
         Start main game loop
     */
-    while (!disp.is_closed() && !disp.is_keyESC()) {
+    while (!disp.is_closed()) {
+        if (disp.is_keyESC()) {
+            setNewRoundParametrs(snake, delay, 9);
+        }
         // Display score
         message = "Score: " + std::to_string(snake.getScore());
         background.draw_image(0, 0, 0, 0, score);
@@ -74,25 +77,29 @@ void SnakeGame::game() {
         else if (disp.is_keyS()) { moveDirection = moveDirection == 2 ? 2 : 3; }
         //// Check if round is over.
         if (isCollide) {
-            addRecord(snake.getScore()); // Add score in records
             // Draw red circle near sneak head
             for (int r = 0; r < 50; r += 3) background.draw_circle(snake.getXHeadPosition(), snake.getYHeadPosition(), r, red, r / 300.0f).display(disp.wait(20));
             for (int rr = 0; rr < 50; rr += 3)
                 ((+background) *= (50 - rr) / 50.0f).draw_circle(snake.getXHeadPosition(), snake.getYHeadPosition(), (50 + rr),red, 1 / 6.0f).display(disp.wait(20));      
-            // Clear background
-            background.assign(64, 64, 1, 3, 0).draw_rectangle(0, 0, W - 1, H - 1, green, 1.0f)
-                .noise(10).resize(W, H + scoreTableH).blur(2).normalize(0, 128).draw_rectangle(0, 0, W, scoreTableH, grey, 1.0f);
-            displayMenu(); // Display game menu
-            snake.clear(static_cast<const int>(delay * 6.5), firstBoxColour, secondBoxColour, colourEnlarge, colourShrink, boxSize, 9); // Clear snake
+            setNewRoundParametrs(snake, delay, 9);
         }
     }
-    printRecordsInFile();
+    printRecordsInFile("Records.txt");
 }
 
 /*
         PRIVATE METHODS
 */
 
+// Set game parametrs for new round and display menu
+void SnakeGame::setNewRoundParametrs(Snake& snake, int delay, int snakeLength) {
+    const unsigned char grey[3] = { 200, 200, 200 }, green[3] = { 50, 205, 50 };
+    addRecord(snake.getScore()); // Add score in records
+    background.assign(64, 64, 1, 3, 0).draw_rectangle(0, 0, W - 1, H - 1, green, 1.0f) // Clear bg
+        .noise(10).resize(W, H + scoreTableH).blur(2).normalize(0, 128).draw_rectangle(0, 0, W - 1, scoreTableH - 1, grey, 1.0f);
+    displayMenu(); // Display menu
+    snake.clear(static_cast<const int>(delay * 6.5), firstBoxColour, secondBoxColour, colourEnlarge, colourShrink, boxSize, 9); // Clear snake
+}
 // Set colours of Apples and Snake
 void SnakeGame::setSnakeColour(unsigned char colour1[3], unsigned char colour2[3]) {
     for (int i = 0; i < 3; i++) {
@@ -128,13 +135,12 @@ void SnakeGame::displayMenu() {
     }
     if (disp.is_keyR()) displayRecords(); // If pressed 'R' show records
     if (disp.is_keyESC()) disp.close(); // If pressed 'ESC' end game
-   
 }
 // Read no more than maximumRecords records from file. Records in file sorted.
-void SnakeGame::readRecordsFromFile() {
+void SnakeGame::readRecordsFromFile(std::string fileName) {
     records.clear();
     std::ifstream file;
-    file.open("Records.txt");
+    file.open(fileName);
     if (file.is_open()) {
         std::string word = ""; // string var. to contain read note from file
         while (!file.eof() && records.size() < maximumRecords) {
@@ -143,16 +149,57 @@ void SnakeGame::readRecordsFromFile() {
         }
     }
 }
+void SnakeGame::readRecordsFromFileTest() {
+    using namespace boost::ut;
+    "readRecordsFromFile"_test = [this] {
+        records.clear();
+        // Create a file with some records
+        std::string fileName = "test_records.txt";
+        std::ofstream file(fileName);
+        file << "5\n4\n3";
+        file.close();
+
+        // Read records from file
+        readRecordsFromFile(fileName);
+
+        // Check if the records match the contents of the file
+        expect(records == std::vector<int>{5, 4, 3}) << "Records do not match expected records";
+        records.clear();
+        };
+}
 // Print records in file
-void SnakeGame::printRecordsInFile() {
+void SnakeGame::printRecordsInFile(std::string fileName) {
     std::ofstream file;
-    file.open("Records.txt");
+    file.open(fileName);
     if (file.is_open()) {
         for (int i = 0; i < records.size() - 1; i++) {
             file << records[i] << '\n';
         }
         file << records[records.size() - 1];
     }
+}
+void SnakeGame::printRecordsInFileTest() {
+    using namespace boost::ut;
+    "printRecordsInFile"_test = [this] {
+        records.clear();
+        // Add some records
+        addRecord(5);
+        addRecord(3);
+        addRecord(4);
+        addRecord(-553);
+        // Print records to file
+        std::string fileName = "test_records.txt";
+        printRecordsInFile(fileName);
+
+        // Read the file and check if it matches the records
+        std::ifstream file(fileName);
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+
+        std::string expected = "5\n4\n3\n-553";  // This assumes that records are sorted in falling order
+        expect(buffer.str() == expected) << "Records in file do not match expected records";
+        records.clear();
+        };
 }
 // Display records on screen
 void SnakeGame::displayRecords(){
@@ -208,8 +255,37 @@ void SnakeGame::addRecord(int rec) {
         records.push_back(rec);
     }
 }
+void SnakeGame::addRecordTest() {
+    using namespace boost::ut;
+    "addRecord"_test = [this] {
+        records.clear();
+        // Test when records vector is not full
+        addRecord(5);
+        expect(records == std::vector<int>{5});
+
+        addRecord(3);
+        expect(records == std::vector<int>{5, 3});
+
+        addRecord(4);
+        expect(records == std::vector<int>{5, 4, 3});
+
+        // Fill up to maximumRecords
+        for (int i = 6; records.size() < maximumRecords; ++i) {
+            addRecord(i);
+        }
+
+        // Test when records vector is full
+        addRecord(2);  // Smaller than smallest record, should not be added
+        expect(records.back() != 2_i);
+        addRecord(500);  // Larger than largest record, should be added
+        expect(records.front() == 500_i && records.size() == maximumRecords);
+        records.clear();
+    };
+}
 void SnakeGame::gameTest() {
     Snake snake(*this, 65, firstBoxColour, secondBoxColour, colourEnlarge, colourShrink, boxSize, 9);
     snake.snakeTest();
-
+    addRecordTest();
+    printRecordsInFileTest();
+    readRecordsFromFileTest();
 }
