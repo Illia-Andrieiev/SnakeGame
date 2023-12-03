@@ -1,4 +1,6 @@
 #include "PixelBox.h"
+#include"libs/boost/ut.hpp"
+#include<string>
 PixelBox::PixelBox(int size, int x, int y, unsigned char red, unsigned char green, unsigned char blue) {
 	this->size = size;
 	this->x = x;
@@ -79,4 +81,31 @@ void PixelBox::draw(cimg_library::CImgDisplay& display, cimg_library::CImg<unsig
 			image.draw_point(i, j,colour);
 		}
 	}
+}
+void PixelBox::drawTest() {
+	using namespace boost::ut;
+	"draw_test"_test = [] {
+		// Arrange
+		cimg_library::CImg<unsigned char> image(100, 100, 1, 3, 0);
+		cimg_library::CImgDisplay display(image, "Test");
+		PixelBox pixelBox(20, 10, 10, 200, 200, 200 ); // Assuming PixelBox has a constructor that takes x, y, size, and colour
+
+		// Act
+		pixelBox.draw(display, image);
+
+		// Assert
+		for (int i = 10; i < 30; i++) {
+			for (int j = 10; j < 30; j++) {
+				expect(	image(i, j, 0, 0) == 200 && image(i, j, 0, 1) == 200 && image(i, j, 0, 2) == 200)<< "Pixel at (" + std::to_string(i) + ", " + std::to_string(j) + ") is not gray";
+			}
+		}
+		};
+}
+// Is given colour same to PIxelBox colour
+bool PixelBox::isColourSame(const unsigned char colour[3]) const {
+	for (int i = 0; i < 3; i++) {
+		if (colour[i] != this->colour[i])
+			return false;
+	}
+	return true;
 }

@@ -25,5 +25,8 @@ public:
 	void setGreen(unsigned char green);
 	void setBlue(unsigned char blue);
 	void draw(cimg_library::CImgDisplay &display, cimg_library::CImg<unsigned char>&image) const;
+	bool isColourSame(const unsigned char colour[3]) const;
+	//Test
+	static void drawTest();
 };
 

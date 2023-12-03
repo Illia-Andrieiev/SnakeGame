@@ -6,21 +6,21 @@ class SnakeGame
 {
 	friend class Snake;
 private:
-	cimg_library::CImg<unsigned char> background;
-	cimg_library::CImgDisplay disp;
+	cimg_library::CImg<unsigned char> background; // Background img
+	cimg_library::CImgDisplay disp; // Game display
 	// Parametrs from main 
 	int argc; 
 	char** argv;
 	// Game parametrs
-	std::vector<int> records;
-	int maximumRecords = 10;
-	int moveDirection = 1;
-	int enlargeAppleLifeTime;
-	int shrinkAppleLifeTime;
-	int maximumEnlargeApples; // life time of enlarge apple in ms
-	int maximumShrinkApples; // life time of shrink apple in ms
-	unsigned int W = 200, H = 200;//400
-	unsigned int scoreTableH = 25;
+	std::vector<int> records; // Contain records
+	int maximumRecords = 10; // Maximum amount of records
+	int moveDirection = 1; // Start move direction for snake
+	time_t enlargeAppleLifeTime; // life time of enlarge apple in ms
+	time_t shrinkAppleLifeTime; // life time of shrink apple in ms
+	int maximumEnlargeApples; // Maximum amount of enlarge apples 
+	int maximumShrinkApples; // Maximum amount of shrink apples 
+	unsigned int W = 200, H = 200; // Game field width and height in pixels
+	unsigned int scoreTableH = 26; // Height of score table in pixels
 	int boxSize; // Size of one game field block
 	unsigned char firstBoxColour[3]; // Colour of sneaks head pixels in RGB format
 	unsigned char secondBoxColour[3]; // Colour of sneaks second box pixels in RGB format
@@ -39,6 +39,7 @@ private:
 public:
 	SnakeGame(int argc, char** argv, int boxSize = 5);
 	void game();
+	void gameTest();
 };
 
  
